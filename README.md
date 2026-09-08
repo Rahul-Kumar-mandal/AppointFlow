@@ -1,4 +1,4 @@
-# OpenSlot — Team Appointment Board
+# AppointFlow — Team Appointment Board
 
 A single self-contained web page (`index.html`) — open it in any browser, no install or server required.
 
@@ -18,16 +18,9 @@ A single self-contained web page (`index.html`) — open it in any browser, no i
 - **Feedback**: every add/edit/complete/cancel/restore action shows a toast in the top-right corner confirming what happened; validation errors appear inline next to the relevant field plus a summary banner at the top of the form.
 - Six sample appointments across three days (today and the following two days) and all three statuses are preloaded so the board is reviewable immediately.
 
-## Assumptions
 
-- **No backend/persistence required for this exercise.** Everything runs client-side in memory; refreshing the page resets to the sample data. The app is structured so the in-memory array (`appointments`) could be swapped for real API calls (`GET/POST/PUT /appointments`) without touching the rendering or validation logic.
-- **"Same time slot" means any overlap**, not just an identical start time — two appointments conflict if their time ranges intersect at all.
-- **Cancelling frees the slot.** A cancelled appointment no longer blocks new bookings at that time, since the team member is no longer using it.
-- **Editing and completing don't lock a cancelled appointment out of use** — it can be edited or restored, in case it was cancelled by mistake.
-- **Single shared board**, not per-person calendars — matches "a small team" needing one shared view rather than individual scheduling.
-- Deleting appointments outright isn't offered, per the spec's requirement that cancelled appointments remain visible.
 
-## Possible next steps (not required by the brief)
+## Possible next steps
 
 - A real backend (e.g., Node/Express + a database) so the board persists and is shared live across the team, with the same validation enforced server-side.
 - Multi-day/week calendar-grid view as an alternative to the list view.
