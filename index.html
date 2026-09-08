@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenSlot — Team Appointment Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F3F1EA;
+    --paper-raised:#FFFFFF;
+    --ink:#22262B;
+    --ink-soft:#6B6F76;
+    --line:#DAD6CB;
+    --accent:#2F6E62;
+    --accent-soft:#E4EEEC;
+    --complete:#6B7D4F;
+    --complete-soft:#EDF0E4;
+    --cancel:#B4483A;
+    --cancel-soft:#F5E7E4;
+    --radius:7px;
+    --font-serif:'Source Serif 4', Georgia, serif;
+    --font-sans:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-sans);
+    font-size:15px;
+    line-height:1.5;
+  }
+  .wrap{max-width:880px; margin:0 auto; padding:36px 24px 80px;}
+
+  header.top{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap:16px; margin-bottom:28px; flex-wrap:wrap;
+  }
+  header.top h1{
+    font-family:var(--font-serif); font-weight:700; font-size:32px;
+    margin:0 0 4px; letter-spacing:-0.01em;
+  }
+  header.top p{margin:0; color:var(--ink-soft); font-size:14px;}
+  .btn{
+    font-family:var(--font-sans); font-size:14px; font-weight:600;
+    border:none; border-radius:var(--radius); padding:10px 16px;
+    cursor:pointer; transition:background .15s ease, transform .05s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-primary:hover{background:#265a50;}
+  .btn-ghost{background:transparent; color:var(--ink); border:1px solid var(--line);}
+  .btn-ghost:hover{background:#EAE7DD;}
+  .btn-text{background:none; border:none; color:var(--ink-soft); font-size:13px; cursor:pointer; padding:4px 2px; text-decoration:underline; text-underline-offset:2px;}
+  .btn-text:hover{color:var(--ink);}
+
+  .toolbar{
+    display:flex; align-items:flex-end; gap:18px; flex-wrap:wrap;
+    padding:16px 18px; background:var(--paper-raised); border:1px solid var(--line);
+    border-radius:var(--radius); margin-bottom:26px;
+  }
+  .field{display:flex; flex-direction:column; gap:5px;}
+  .field label{font-size:12px; color:var(--ink-soft); font-weight:600;}
+  input, select, textarea{
+    font-family:var(--font-sans); font-size:14px; color:var(--ink);
+    border:1px solid var(--line); border-radius:6px; padding:8px 10px;
+    background:#fff;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  .toolbar .count{margin-left:auto; font-size:13px; color:var(--ink-soft); align-self:center;}
+
+  .day-group{margin-bottom:30px;}
+  .day-group h2{
+    font-family:var(--font-serif); font-weight:600; font-size:19px;
+    margin:0 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line);
+  }
+
+  .appt{
+    display:flex; gap:16px; align-items:flex-start;
+    background:var(--paper-raised); border:1px solid var(--line);
+    border-left:4px solid var(--accent);
+    border-radius:6px; padding:14px 16px; margin-bottom:10px;
+  }
+  .appt.status-completed{border-left-color:var(--complete);}
+  .appt.status-cancelled{border-left-color:var(--cancel); opacity:0.72;}
+  .appt .time{
+    font-variant-numeric:tabular-nums; font-weight:600; font-size:13.5px;
+    width:110px; flex-shrink:0; color:var(--ink); padding-top:2px;
+  }
+  .appt .main{flex:1; min-width:0;}
+  .appt .main h3{
+    margin:0 0 3px; font-size:15.5px; font-weight:600;
+  }
+  .appt.status-cancelled .main h3{text-decoration:line-through; text-decoration-color:var(--cancel);}
+  .appt .main p{margin:0; color:var(--ink-soft); font-size:13.5px;}
+  .badge{
+    display:inline-block; font-size:11px; font-weight:700; letter-spacing:0.02em;
+    padding:3px 9px; border-radius:20px; margin-top:6px;
+  }
+  .badge.status-scheduled{background:var(--accent-soft); color:var(--accent);}
+  .badge.status-completed{background:var(--complete-soft); color:var(--complete);}
+  .badge.status-cancelled{background:var(--cancel-soft); color:var(--cancel);}
+  .actions{display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; max-width:190px;}
+  .actions button{
+    font-family:var(--font-sans); font-size:12.5px; font-weight:600;
+    padding:6px 10px; border-radius:6px; border:1px solid var(--line);
+    background:#fff; color:var(--ink); cursor:pointer;
+  }
+  .actions button:hover{background:#EFEDE4;}
+  .actions button.danger{color:var(--cancel); border-color:#E4C9C3;}
+  .actions button.danger:hover{background:var(--cancel-soft);}
+  .actions button.affirm{color:var(--complete); border-color:#D4DCC3;}
+  .actions button.affirm:hover{background:var(--complete-soft);}
+  .confirm-row{display:flex; gap:6px; align-items:center; font-size:12.5px; color:var(--ink-soft);}
+
+  .empty{
+    text-align:center; padding:50px 20px; color:var(--ink-soft);
+    border:1px dashed var(--line); border-radius:var(--radius); background:var(--paper-raised);
+  }
+  .empty strong{display:block; color:var(--ink); font-size:16px; margin-bottom:4px; font-family:var(--font-serif);}
+
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0; background:rgba(34,38,43,0.45);
+    display:flex; align-items:center; justify-content:center; padding:20px; z-index:50;
+  }
+  .modal{
+    background:var(--paper-raised); border-radius:10px; width:100%; max-width:480px;
+    padding:26px 26px 22px; max-height:90vh; overflow-y:auto;
+  }
+  .modal h2{font-family:var(--font-serif); margin:0 0 4px; font-size:22px;}
+  .modal .sub{color:var(--ink-soft); font-size:13.5px; margin:0 0 18px;}
+  .form-row{display:flex; flex-direction:column; gap:5px; margin-bottom:14px;}
+  .form-row label{font-size:13px; font-weight:600;}
+  .form-row .hint{font-size:12px; color:var(--ink-soft); font-weight:400;}
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .err-text{color:var(--cancel); font-size:12.5px; margin-top:2px;}
+  .form-error-banner{
+    background:var(--cancel-soft); color:var(--cancel); border-radius:6px;
+    padding:10px 12px; font-size:13px; margin-bottom:16px; font-weight:600;
+  }
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:6px;}
+
+  /* Toast */
+  #toast-host{position:fixed; top:20px; right:20px; display:flex; flex-direction:column; gap:8px; z-index:100;}
+  .toast{
+    padding:11px 16px; border-radius:7px; font-size:13.5px; font-weight:600;
+    box-shadow:0 4px 14px rgba(0,0,0,0.12); max-width:320px;
+    animation:slidein .18s ease-out;
+  }
+  .toast.success{background:var(--complete); color:#fff;}
+  .toast.error{background:var(--cancel); color:#fff;}
+  @keyframes slidein{from{opacity:0; transform:translateY(-6px);} to{opacity:1; transform:translateY(0);}}
+
+  @media (max-width:600px){
+    .appt{flex-direction:column;}
+    .actions{max-width:none; justify-content:flex-start;}
+    .form-grid{grid-template-columns:1fr;}
+    .toolbar .count{margin-left:0; order:5; width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<div id="toast-host"></div>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>OpenSlot</h1>
+      <p>The team's shared board for who's meeting when.</p>
+    </div>
+    <button class="btn btn-primary" id="openAddBtn">+ Add appointment</button>
+  </header>
+
+  <div class="toolbar">
+    <div class="field">
+      <label for="filterDate">Date</label>
+      <input type="date" id="filterDate">
+    </div>
+    <div class="field">
+      <label for="filterStatus">Status</label>
+      <select id="filterStatus">
+        <option value="all">All statuses</option>
+        <option value="scheduled">Scheduled</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+    <button class="btn-text" id="clearFiltersBtn">Clear filters</button>
+    <div class="count" id="resultCount"></div>
+  </div>
+
+  <div id="board"></div>
+</div>
+
+<script>
+/* ---------- State ---------- */
+let appointments = [
+  {id:"a1", title:"Client kickoff — Meridian Co.", description:"Discuss project scope and timeline.", date:"2026-09-08", start:"09:00", end:"09:45", status:"scheduled"},
+  {id:"a2", title:"Design review", description:"Walk through the new homepage mockups.", date:"2026-09-08", start:"11:00", end:"12:00", status:"scheduled"},
+  {id:"a3", title:"1:1 with Priya", description:"Weekly check-in.", date:"2026-09-08", start:"14:00", end:"14:30", status:"completed"},
+  {id:"a4", title:"Vendor call — printing", description:"Confirm order for event signage.", date:"2026-09-09", start:"10:00", end:"10:30", status:"cancelled"},
+  {id:"a5", title:"Team retro", description:"Sprint 14 retrospective.", date:"2026-09-09", start:"15:00", end:"16:00", status:"scheduled"},
+  {id:"a6", title:"Onboarding — new hire", description:"Walk through tools and accounts.", date:"2026-09-10", start:"09:30", end:"10:30", status:"scheduled"}
+];
+
+let filters = { date:"", status:"all" };
+let confirmingCancelId = null; // row currently showing inline cancel confirmation
+let editingId = null; // appointment being edited in the modal, null = adding new
+
+/* ---------- Helpers ---------- */
+function uid(){ return 'a' + Math.random().toString(36).slice(2,9); }
+
+function fmtTime(t){
+  const [h,m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+function fmtDateHeading(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+}
+function overlaps(aStart, aEnd, bStart, bEnd){
+  return aStart < bEnd && bStart < aEnd;
+}
+function findConflict(date, start, end, excludeId){
+  return appointments.find(a =>
+    a.id !== excludeId &&
+    a.date === date &&
+    a.status !== 'cancelled' &&
+    overlaps(start, end, a.start, a.end)
+  );
+}
+
+function toast(message, type='success'){
+  const host = document.getElementById('toast-host');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = message;
+  host.appendChild(el);
+  setTimeout(() => { el.remove(); }, 3200);
+}
+
+/* ---------- Rendering ---------- */
+function render(){
+  renderBoard();
+}
+
+function renderBoard(){
+  const board = document.getElementById('board');
+  let list = appointments.slice();
+
+  if (filters.date) list = list.filter(a => a.date === filters.date);
+  if (filters.status !== 'all') list = list.filter(a => a.status === filters.status);
+
+  document.getElementById('resultCount').textContent =
+    `${list.length} appointment${list.length === 1 ? '' : 's'}`;
+
+  if (list.length === 0){
+    board.innerHTML = `
+      <div class="empty">
+        <strong>No appointments match these filters</strong>
+        Try a different date or status, or add a new appointment.
+      </div>`;
+    return;
+  }
+
+  // group by date, sort dates, sort by start time within each date
+  const byDate = {};
+  list.forEach(a => { (byDate[a.date] = byDate[a.date] || []).push(a); });
+  const dates = Object.keys(byDate).sort();
+
+  board.innerHTML = dates.map(date => {
+    const rows = byDate[date].sort((a,b) => a.start.localeCompare(b.start));
+    return `
+      <div class="day-group">
+        <h2>${fmtDateHeading(date)}</h2>
+        ${rows.map(renderRow).join('')}
+      </div>`;
+  }).join('');
+}
+
+function renderRow(a){
+  const statusLabel = a.status.charAt(0).toUpperCase() + a.status.slice(1);
+  let actionsHtml;
+
+  if (confirmingCancelId === a.id){
+    actionsHtml = `
+      <div class="confirm-row">
+        Cancel this appointment?
+        <button data-action="confirmCancel" data-id="${a.id}" class="danger">Yes, cancel</button>
+        <button data-action="dismissCancel" data-id="${a.id}">No, keep</button>
+      </div>`;
+  } else if (a.status === 'scheduled'){
+    actionsHtml = `
+      <button data-action="edit" data-id="${a.id}">Edit</button>
+      <button data-action="complete" data-id="${a.id}" class="affirm">Mark complete</button>
+      <button data-action="cancel" data-id="${a.id}" class="danger">Cancel</button>`;
+  } else if (a.status === 'completed'){
+    actionsHtml = `
+      <button data-action="edit" data-id="${a.id}">Edit</button>
+      <button data-action="cancel" data-id="${a.id}" class="danger">Cancel</button>`;
+  } else {
+    actionsHtml = `
+      <button data-action="edit" data-id="${a.id}">Edit</button>
+      <button data-action="restore" data-id="${a.id}" class="affirm">Restore</button>`;
+  }
+
+  return `
+    <div class="appt status-${a.status}">
+      <div class="time">${fmtTime(a.start)}<br>${fmtTime(a.end)}</div>
+      <div class="main">
+        <h3>${escapeHtml(a.title)}</h3>
+        ${a.description ? `<p>${escapeHtml(a.description)}</p>` : ''}
+        <span class="badge status-${a.status}">${statusLabel}</span>
+      </div>
+      <div class="actions">${actionsHtml}</div>
+    </div>`;
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ---------- Modal (Add / Edit) ---------- */
+function openModal(appt){
+  editingId = appt ? appt.id : null;
+  const isEdit = !!appt;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.id = 'modalOverlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h2>${isEdit ? 'Edit appointment' : 'Add appointment'}</h2>
+      <p class="sub">${isEdit ? 'Update the details below.' : 'Fill in the details for the new appointment.'}</p>
+      <div id="formErrorBanner"></div>
+      <form id="apptForm">
+        <div class="form-row">
+          <label for="f-title">Title</label>
+          <input type="text" id="f-title" value="${appt ? escapeHtml(appt.title) : ''}" placeholder="e.g. Client check-in">
+          <div class="err-text" id="err-title"></div>
+        </div>
+        <div class="form-row">
+          <label for="f-desc">Description <span class="hint">(optional)</span></label>
+          <textarea id="f-desc" rows="2" placeholder="Any useful context">${appt ? escapeHtml(appt.description || '') : ''}</textarea>
+        </div>
+        <div class="form-row">
+          <label for="f-date">Date</label>
+          <input type="date" id="f-date" value="${appt ? appt.date : ''}">
+          <div class="err-text" id="err-date"></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="f-start">Start time</label>
+            <input type="time" id="f-start" value="${appt ? appt.start : ''}">
+          </div>
+          <div class="form-row">
+            <label for="f-end">End time</label>
+            <input type="time" id="f-end" value="${appt ? appt.end : ''}">
+          </div>
+        </div>
+        <div class="err-text" id="err-time"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="cancelModalBtn">Discard</button>
+          <button type="submit" class="btn btn-primary">${isEdit ? 'Save changes' : 'Add appointment'}</button>
+        </div>
+      </form>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  document.getElementById('cancelModalBtn').addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+  document.getElementById('apptForm').addEventListener('submit', handleFormSubmit);
+}
+
+function closeModal(){
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) overlay.remove();
+  editingId = null;
+}
+
+function clearFormErrors(){
+  ['err-title','err-date','err-time'].forEach(id => document.getElementById(id).textContent = '');
+  document.getElementById('formErrorBanner').innerHTML = '';
+}
+
+function handleFormSubmit(e){
+  e.preventDefault();
+  clearFormErrors();
+
+  const title = document.getElementById('f-title').value.trim();
+  const description = document.getElementById('f-desc').value.trim();
+  const date = document.getElementById('f-date').value;
+  const start = document.getElementById('f-start').value;
+  const end = document.getElementById('f-end').value;
+
+  let hasError = false;
+  if (!title){ document.getElementById('err-title').textContent = 'Title is required.'; hasError = true; }
+  if (!date){ document.getElementById('err-date').textContent = 'Date is required.'; hasError = true; }
+  if (!start || !end){
+    document.getElementById('err-time').textContent = 'Start and end time are both required.';
+    hasError = true;
+  } else if (end <= start){
+    document.getElementById('err-time').textContent = 'End time must be after the start time.';
+    hasError = true;
+  }
+
+  if (hasError){
+    document.getElementById('formErrorBanner').innerHTML =
+      `<div class="form-error-banner">Please fix the highlighted fields before saving.</div>`;
+    return;
+  }
+
+  const conflict = findConflict(date, start, end, editingId);
+  if (conflict){
+    document.getElementById('formErrorBanner').innerHTML =
+      `<div class="form-error-banner">This overlaps with "${escapeHtml(conflict.title)}"
+       (${fmtTime(conflict.start)}–${fmtTime(conflict.end)}) on the same day. Choose a different time.</div>`;
+    return;
+  }
+
+  if (editingId){
+    const a = appointments.find(x => x.id === editingId);
+    Object.assign(a, { title, description, date, start, end });
+    toast('Appointment updated.');
+  } else {
+    appointments.push({ id: uid(), title, description, date, start, end, status:'scheduled' });
+    toast('Appointment added.');
+  }
+
+  closeModal();
+  render();
+}
+
+/* ---------- Row actions (event delegation) ---------- */
+document.getElementById('board').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  const appt = appointments.find(a => a.id === id);
+  if (!appt && action !== 'dismissCancel') return;
+
+  if (action === 'edit'){
+    openModal(appt);
+  } else if (action === 'complete'){
+    appt.status = 'completed';
+    toast(`"${appt.title}" marked as completed.`);
+    render();
+  } else if (action === 'restore'){
+    appt.status = 'scheduled';
+    toast(`"${appt.title}" restored to scheduled.`);
+    render();
+  } else if (action === 'cancel'){
+    confirmingCancelId = id;
+    render();
+  } else if (action === 'confirmCancel'){
+    appt.status = 'cancelled';
+    confirmingCancelId = null;
+    toast(`"${appt.title}" cancelled.`, 'error');
+    render();
+  } else if (action === 'dismissCancel'){
+    confirmingCancelId = null;
+    render();
+  }
+});
+
+/* ---------- Toolbar ---------- */
+document.getElementById('openAddBtn').addEventListener('click', () => openModal(null));
+document.getElementById('filterDate').addEventListener('change', (e) => {
+  filters.date = e.target.value;
+  render();
+});
+document.getElementById('filterStatus').addEventListener('change', (e) => {
+  filters.status = e.target.value;
+  render();
+});
+document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+  filters = { date:'', status:'all' };
+  document.getElementById('filterDate').value = '';
+  document.getElementById('filterStatus').value = 'all';
+  render();
+});
+
+/* ---------- Init ---------- */
+render();
+</script>
+</body>
+</html>
